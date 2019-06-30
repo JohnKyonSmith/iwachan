@@ -1,3 +1,7 @@
+### Attention: Youtube-dl works for the site now, making this script almost irrelevant.
+
+I'll try to make it get a few variables that youtube-dl doesn't currently get.
+
 # Iwachan
 Script to play videos from Iwara without the embedded player
 
