@@ -2,6 +2,27 @@
 
 I'll try to make it get a few variables that youtube-dl doesn't currently get.
 
+### Fixing youtube-dl extractor for better compatibility with Iwara
+
+- Update youtube-dl
+- Download this version of the [iwara extractor.](https://raw.githubusercontent.com/ytdl-org/youtube-dl/6b31024945dcd89ce27c4e8706d9cd1cb40f6c12/youtube_dl/extractor/iwara.py)
+- Make a backup of the original extractor (just in case)
+- Replace old extractor with the downloaded version
+- ???
+- Profit!!
+
+The new extractor supports:
+
+- title
+- age limit
+- formats
+- upload_date
+- uploader
+- description
+- comment_count
+- like_count
+- view_count
+
 # Iwachan
 Script to play videos from Iwara without the embedded player
 
