@@ -14,7 +14,7 @@ I'll try to make it get a few variables that youtube-dl doesn't currently get.
 The new extractor supports:
 
 - title
-- age limit
+- age_limit
 - formats
 - upload_date
 - uploader
