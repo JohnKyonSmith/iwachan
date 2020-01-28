@@ -82,7 +82,7 @@ I believe all files from __Iwara__ are __mp4__ while __external sites__ get muxe
 ```
 iwachan             (Uses the first entry in your clipboard using the "xsel" program)
 iwachan URL         (Uses the link you pass to the script)
-iwachan batch.txt   (Uses a plain text bactch file)
+iwachan batch.txt   (Uses a plain text batch file)
 ```
 
 ## Batch Files:
