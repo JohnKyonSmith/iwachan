@@ -1,254 +1,93 @@
 #!/bin/bash
+# JohnKyonSmith 2020-01-28
+# Version: Iwachan-v2.0
 
-##
-##
-## Script to play video files and possibly download them too.
-## Based on the tv-player script
-## Requires:
-##	- mpv with networking support (ffmpeg with networking)
-##	- everything else should come with a default GNU/Linux install
-##
-##
+if [ -z "$1" ]; then
+	URL=`xsel -o`
+else 
+	URL="$1"
+	BATCH="$2"
+fi
 
-# General variables
+external_links(){
+	echo "Youtube/External link detected!"
+	youtube-dl --config-location $HOME/.config/youtube-dl/iwachan-hq "$URL"
+}
 
-url_f="$2"		# Catches the url when you use a  flag
-url_nf="$1"		# Catches the url when you do NOT use a flag
-tmp_dir="/tmp/iwachan"	# directory where all the temporary files are put
-version="Iwachan-v1.04"
-user_agent="Mozilla/5.0 (X11; Linux x86_64; rv:41.0) Gecko/20100101 Firefox/41.0 Iceweasel/41.0.2"	# change at your discretion
-downloads=""		# directory where the script will download the videos ex.(/home/USER/downloads/)
-tube_ops=""		# variable for youtube-dl options, currently not needed
-tmp_node="00000"	# temporary directory node, will assign the video node number to the temporary script files directories ex. /tmp/iwachan-XXXXXX
+iwara_links(){
+	echo "Iwara link detected!"
+	youtube-dl --config-location $HOME/.config/youtube-dl/iwachan "$URL"
+}
 
-# Colors
-c_00="\033[0m"		# Default color
-c_01="\033[31m"		# Red
-c_02="\033[32m"		# Green
-c_03="\033[33m"		# Yellow
-
-# General funtions
-# Should be pretty obvious what everything does.
-
-create_files(){
-	if [[ "$url_nf" =~ "iwara.tv" ]]; then
-		tmp_node=`sed -n 's|.*\(/node/\)\([0-9]*\).*|\2|p' <<< $url_nf`
-		if [ -z $tmp_node ]; then
-			tmp_node=`sed -n 's|.*\(/videos/\)\([a-zA-Z0-9]*\).*|\2|p' <<< $url_nf`
-			if [ -z $tmp_node ]; then
-				echo -e "${c_03}Warning! No valid node!${c_00}"
-			fi
+batch_file(){
+	echo "Batch file detected!"
+	grep iwara.tv "$URL" > /dev/null
+	if [ $? == "0" ]; then
+		grep iwara.tv "$URL" > iwara-links.tmp
+		grep -v iwara.tv "$URL" > external-links.tmp
+		youtube-dl --config-location $HOME/.config/youtube-dl/iwachan -a "iwara-links.tmp"
+		if [ -s external-links.tmp ]; then
+			youtube-dl --config-location $HOME/.config/youtube-dl/iwachan-hq -a "external-links.tmp"
 		else
 			:
 		fi
-	elif [[ "$url_nf" != "iwara.tv" ]]; then
-		tmp_node=`sed -n 's|.*\(/node/\)\([0-9]*\).*|\2|p' <<< $url_f`
-		if [ -z $tmp_node ]; then
-			tmp_node=`sed -n 's|.*\(/videos/\)\([a-zA-Z0-9]*\).*|\2|p' <<< $url_f`
-			if [ -z $tmp_node ]; then
-				echo -e "${c_03}Warning! No valid node!${c_00}"
-			fi
-		else
-			:
-		fi
-	fi
-	mkdir $tmp_dir-$tmp_node
-	touch \
-		$tmp_dir-$tmp_node/multi.txt \
-		$tmp_dir-$tmp_node/mainpage.txt \
-		$tmp_dir-$tmp_node/xml_file.txt \
-		$tmp_dir-$tmp_node/iwalog_00 \
-		$tmp_dir-$tmp_node/iwalog_01
-}
-
-clean_nask(){		# delete temporary files without asking by using directory node
-	if [ -d $tmp_dir-$tmp_node ]; then
-		echo -n "Cleaning files... "
-		rm -R $tmp_dir-$tmp_node
-		echo -e "${c_02}done.${c_00}"
-		exit 0
 	else
-		echo -e "${c_03}No files to clean${c_00}"
-		exit 0
+		youtube-dl --config-location $HOME/.config/youtube-dl/iwachan-hq -a "$URL"
 	fi
-}
-
-clean_ask(){		# delete ALL temporary script files, regardless of node
-	echo -e "${c_01}WARNING! This will remove ALL temporary script files!${c_00}"
-	read -p "Continue?(y/n) " del
-	if [ $del == y ]; then
-		rm -R $tmp_dir*
-		echo -e "${c_02}Done.${c_00}"
-	else
-		echo -e "${c_03}Not cleaning files!${c_00}"
-	fi
-}
-
-get_html(){		# download html page
-	echo -n "Downloading page... "
-	if [[ "$url_nf" =~ "iwara.tv" ]]; then
-		echo "MAIN_URL:$url_nf" >> $tmp_dir-$tmp_node/multi.txt
-		wget -nv "$url_nf" -o $tmp_dir-$tmp_node/iwalog_00 -O $tmp_dir-$tmp_node/mainpage.txt
-		echo -e "${c_02}done.${c_00}"
-	elif [[ "$url_nf" != "iwara.tv" ]]; then
-		echo "MAIN_URL:$url_f" >> $tmp_dir-$tmp_node/multi.txt
-		wget -nv "$url_f" -o $tmp_dir-$tmp_node/iwalog_00 -O $tmp_dir-$tmp_node/mainpage.txt
-		echo -e "${c_02}done.${c_00}"
-	fi
-}
-
-get_link(){		# get page node/identifier and the real video link
-	main_node=`grep 'MAIN_URL:' $tmp_dir-$tmp_node/multi.txt | sed -n 's|.*\(/node/\)\([0-9]*\).*|\2|p'`
-	video_link=`sed -n 's|.*\(<source src="\)\([^"]*\).*|\2|p' $tmp_dir-$tmp_node/mainpage.txt`
-	if [ -z $main_node ]; then
-		main_node=`grep 'shortlink' $tmp_dir-$tmp_node/mainpage.txt | sed -n 's|.*\(/node/\)\([0-9]*\).*|\2|p'`
-		if [ -z $main_node ]; then
-			echo -e "${c_03}Warning! Variable MAIN_NODE not set!${c_00}"
-		fi
+	
+	if [ -f iwara-links.tmp ]; then
+		rm iwara-links.tmp
+		rm external-links.tmp
 	else
 		:
 	fi
-	echo "MAIN_NODE:$main_node" >> $tmp_dir-$tmp_node/multi.txt
-	echo "VIDEO_URL:$video_link" >> $tmp_dir-$tmp_node/multi.txt
 }
 
-spider(){		# check if video is available with wget spider, throw an error if video is unreachable
-	spider_link=`grep "VIDEO_URL:" $tmp_dir-$tmp_node/multi.txt | sed -n "s|\(VIDEO_URL:\)\(.*\)|\2|p"`
-	if [[ "$spider_link" =~ "iwara.tv" ]]; then
-		echo -n "Checking video availability... "
-		wget -nv --spider "$spider_link" -o $tmp_dir-$tmp_node/iwalog_01
-		grep -i ' 200 OK' $tmp_dir-$tmp_node/iwalog_01 > /dev/null
-		if [ $? == 0 ];then
-			echo "SPIDER:200 OK" >> $tmp_dir-$tmp_node/multi.txt
-			echo -e "${c_02}done.${c_00}"
+clean_batch() {
+	if [ -f "$BATCH" ]; then
+		FILE="${BATCH%.*}"	# Get filename
+		FILE_TMP="${FILE}.tmp"
+		echo "Cleaning batch file!"
+		sed -i.bak "/iwara.tv/ s:?.*::" ${BATCH}	# Remove anything after the ? in iwara links to not trip youtube-dl extractor
+		grep iwara.tv ${BATCH} > ${FILE_TMP}
+		sed -i "s:.*videos/::g" ${FILE_TMP}		# Clean links to search for files with this pattern
+		sort -u -o ${FILE_TMP} ${FILE_TMP}
+		cat ${FILE_TMP} | while IFS= read -r LINE; do
+			find . \( -name "*$LINE*" ! -name "*.part" \) | grep -q "."	# Search for pattern and remove links to existing files
+				if [ $? == 0 ]; then
+					sed -i "/${LINE}/d" $BATCH
+				else
+					:
+				fi
+		done
+		rm ${FILE_TMP}
+		grep youtube.com ${BATCH} > ${FILE_TMP}
+		if [ -s ${FILE_TMP} ]; then
+			sed -i "s:.*watch?v=::g" ${FILE_TMP}		# Clean links to search for files with this pattern
+			sort -u -o ${FILE_TMP} ${FILE_TMP}
+			cat ${FILE_TMP} | while IFS= read -r LINE; do
+				find . \( -name "*$LINE*" ! -name "*.part" \) | grep -q "."	# Search for pattern and remove links to existing files
+					if [ $? == 0 ]; then
+						sed -i "/${LINE}/d" $BATCH
+					else
+						:
+					fi
+			done
 		else
-			echo "SPIDER:ERROR" >> $tmp_dir-$tmp_node/multi.txt
-			echo -e "${c_01}ERROR: No valid URL or video unavailable right now.${c_00}"
+			:
 		fi
+		rm ${FILE_TMP}
+	else
+		echo "ERROR: No batch file detected!"
 	fi
 }
 
-play(){			# play video
-	play_link=`grep "VIDEO_URL:" $tmp_dir-$tmp_node/multi.txt | sed -n "s|.*\(VIDEO_URL:\)\(.*\)|\2|p"`
-	play_title=`sed -n 's|.*\(<h1 class="title">\)\([^<]*\).*|\2|p' $tmp_dir-$tmp_node/mainpage.txt`
-	mpv --really-quiet --media-title="$play_title" "$play_link"
-}
-
-# Downloader
-
-download(){		# download video in format: /CUSTOM/PATH/Iwara - TITLE.NODE.EXTENSION Note: custom_path is only applied if you supplied one in the General Variables
-	down_title=`sed -n 's|.*\(<h1 class="title">\)\([^<]*\).*|\2|p' $tmp_dir-$tmp_node/mainpage.txt`
-	down_link=`grep "VIDEO_URL:" $tmp_dir-$tmp_node/multi.txt | sed -n "s|.*\(VIDEO_URL:\)\(.*\)|\2|p"`
-	down_node=`grep "MAIN_NODE:" $tmp_dir-$tmp_node/multi.txt | sed -n "s|.*\(MAIN_NODE:\)\(.*\)|\2|p"`
-	down_ext=`grep "VIDEO_URL:" $tmp_dir-$tmp_node/multi.txt | sed -n "s|.*\(file=[0-9\%A-Za-z_-]*\)\([^&]*\).*|\2|p"`
-	echo -e "${c_02}Video Node: $down_node${c_00}"
-	echo -e "${c_03}Iwachan doesn't want to download ecchi videos for you, senpai.${c_00}"
-	sleep 1
-	wget -q --show-progress -U "$user_agent" -nc "$down_link" -O "$downloads"Iwara\ -\ "$down_title".$down_node"$down_ext"
-}
-
-# Get info of a video, info_get is currently not being used
-info_get(){
-	cat $tmp_dir-$tmp_node/mainpage.txt | tr "\n" "|" | grep -o '<p>.*</p>' | sed 's/\(<p>\|<\/p>\)//g' | sed 's/|/\n/g' > $tmp_dir-$tmp_node/MAINPAGE
-}
-
-info_display(){			# some video information
-	info_title=`sed -n 's|.*\(<h1 class="title">\)\([^<]*\).*|\2|p' $tmp_dir-$tmp_node/mainpage.txt`
-	info_desc=`sed -n 's|.*\(<div class="field-item even"><p>\)\([^<]*\).*|\2|p' $tmp_dir-$tmp_node/mainpage.txt`
-	info_thumb=`sed -n 's|.*\(poster="\)\([^"]*\).*|\2|p' $tmp_dir-$tmp_node/mainpage.txt`
-	clear
-	echo -e "${c_03}Iwachan is not a botnet.${c_00}"
-	echo
-	echo -e "${c_03}Getting info... ${c_00}"
-	echo
-	echo -e "${c_03}Video Title:${c_00}"
-	echo
-	echo "$info_title"
-	echo
-	echo -e "${c_03}Description:${c_00}"
-	echo
-	echo "$info_desc"
-	echo
-	echo -e "${c_03}Video Thumbnail:${c_00}"
-	echo
-	echo "$info_thumb"
-	echo
-}
-
-halp(){			# No idea what this does
-	echo "Use one of the following:"
-	echo
-	echo "-c	Clean ALL temporary files the script created"
-	echo "-d	Download the video instead of streaming it"
-	echo "-h	Show this help screen"
-	echo "-i	Get information of a video, YMMV"
-	echo "-n	Stream normally"
-	echo "-v	Display script version"
-	echo "-z	Show possible errors and fixes"
-	echo
-}
-
-errors(){		# I'll try to finish it, I promise.
-	echo -e "${c_01}Kaji! Kaji! Tasukete yo!!${c_00}"
-	sleep 1s
-	echo -e "${c_02}Work in progress (^q^)${c_00}"
-}
-
-# getopts loop
-
-if [[ "$1" =~ "iwara.tv" ]]; then
-	create_files
-	get_html
-	get_link
-	spider
-	play
-	clean_nask
-elif [[ -z $1 ]]; then
-	echo "Usage: iwachan URL or iwachan -h"
+if [[ "$URL" =~ "iwara.tv" ]]; then
+	iwara_links
+elif [ -f "$URL" ]; then
+	batch_file
+elif [ "$URL" == "CLEAN" ]; then
+	clean_batch
 else
-	while getopts ":cd:hi:n:t:vz" flag; do
-		case $flag in
-			c)
-				clean_ask
-				;;
-			d)
-				create_files
-				get_html
-				get_link
-				spider
-				download
-				clean_nask
-				;;
-			h)
-				halp
-				;;
-			i)
-				create_files
-				get_html
-				info
-				clean_nask
-				;;
-			n)
-				echo "Iwachan has many useless options (^q^)"
-				create_files
-				get_html
-				get_link
-				spider
-				play
-				clean_nask
-				;;
-			v)
-				echo "Hai! $version desu! Hentai ja nai desu!"
-				;;
-			z)
-				errors
-				;;
-			\?)
-				echo "Invalid option: -$OPTARG" >&2
-				;;
-			:)
-				echo "Option -$OPTARG requires a URL/file."
-				;;
-		esac
-	done
+	external_links
 fi

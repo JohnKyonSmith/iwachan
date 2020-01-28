@@ -1,73 +1,136 @@
-### Attention: Youtube-dl works for the site now, making this script almost irrelevant.
+# Iwachan
+Script to download videos from Iwara/External sites using youtube-dl.
+This is a complete redo of the original iwachan script.
 
-I'll try to make it get a few variables that youtube-dl doesn't currently get.
+#### Current Version: Iwachan-v2.0
 
-### Fixing youtube-dl extractor for better compatibility with Iwara
+## Description:
+Helper script to use __youtube-dl__ as __iwachan__. It detects if the URL is from Iwara, an external site (Ex. Youtube), or a batch file. If it detects a batch file, it separates the links to use different youtube-dl settings. It will get the __best source__ from Iwara and __1080p60fps or lower__ from external sites. You need to manually edit these settings if you want other video/audio resolutions/formats (_look into the __youtube-dl -F__ option_). It uses two external files (__iwachan__ and __iwachan-hq__) that have the custom settings in the $HOME/.config/youtube-dl directory. The __iwachan file__ has the settings for __iwara.tv__ while __iwachan-hq__ has the settings for __external sites__. Lastly, this script uses the __updated extractor__.
 
-- Update youtube-dl
-- Download this version of the [iwara extractor.](https://raw.githubusercontent.com/ytdl-org/youtube-dl/6b31024945dcd89ce27c4e8706d9cd1cb40f6c12/youtube_dl/extractor/iwara.py)
-- Make a backup of the original extractor (just in case)
-- Replace old extractor with the downloaded version
-- ???
-- Profit!!
+## Requirements:
+ - youtube-dl (with updated extractor)
+ - youtube-dl configs (iwachan & iwachan-hq)
+ - ffmpeg
+ - xsel
+ - everything else should be on a default GNU/Linux install
 
+## Installation
+You must install all the files in their respective locations. Adjust the paths if you need to. Install __xsel__ from your package manager. Install __youtube-dl__ from your package manager or from python-pip. Make the script __executable__ and place it in either your __$HOME/bin__ or __$PATH__. These commands will clone this repo, make a backup of the original iwara.py extractor, make symlinks to where all the files need to go, and symlink the script to your $HOME/bin directory.
+```
+git clone https://github.com/JohnKyonSmith/iwachan.git && cd iwachan
+mkdir -p $HOME/.config/youtube-dl
+chmod +x iwachan
+cp $HOME/.local/lib/python3.7/site-packages/youtube_dl/extractor/iwara.py extractor/iwara.py.orig
+ln -sf $(pwd)/extractor/iwara.py $HOME/.local/lib/python3.7/site-packages/youtube_dl/extractor/iwara.py
+ln -sf $(pwd)/config/iwachan $HOME/.config/youtube-dl/iwachan && ln -sf $(pwd)/config/iwachan-hq $HOME/.config/youtube-dl/iwachan-hq
+ln -sf $(pwd)/iwachan $HOME/bin/iwachan
+```
+
+## Information:
+### Fixing youtube-dl extractor after updating youtube-dl
+If you get the original extractor after updating youtube-dl, go back to the cloned repository and run this command again.
+```
+ln -sf $(pwd)/extractor/iwara.py $HOME/.local/lib/python3.7/site-packages/youtube_dl/extractor/iwara.py
+```
+
+### Updated Extractor
 The new extractor supports:
 
-- title
-- age_limit
-- formats
-- upload_date
-- uploader
-- description
-- comment_count
-- like_count
-- view_count
+ - title
+ - age\_limit
+ - formats
+ - upload\_date
+ - uploader
+ - description
+ - comment\_count (causing errors, removed)
+ - like\_count
+ - view\_count
 
-# Iwachan
-Script to play videos from Iwara without the embedded player
+Credit to __AlexAplin__ for the updated extractor.
 
-This script is based on the tv-player script before the site updated to it's now Iwara design/state.
+### Youtube-dl config files
+If you want to change the output directory/formats/other settings, edit the __iwachan & iwachan-hq__ config files in the iwachan/config directory, and symlink them again from the root of the cloned repo with the following command:
+```
+ln -sf $(pwd)/config/iwachan $HOME/.config/youtube-dl/iwachan && ln -sf $(pwd)/config/iwachan-hq $HOME/.config/youtube-dl/iwachan-hq
+```
+### Youtube-dl config file settings
+__-f__ option: This is the formats option. This chooses the quality/format of the video/audio you want to download. The settings for the iwachan file is quite simple. The settings for the external sites are a little more complicated. _Read the youtube-dl manpage to understand what exactly is going on._
 
-Make the script executable and place it in either your $HOME/bin or $PATH.
+__--output=__ option: This decides where to put the downloaded videos and how to name the files. It must have quotes in order to accept spaces. The accepted values are the ones lsted in the "Updated Extractor" section. _Look at the youtube-dl manpage for more info on how to use the values._
 
-#### Current Version: Iwachan-v1.04
+__--ignore-errors__ option: Prevents youtube-dl from exitting due to dead links or other minor errors.
 
-### Requirements:
-	- mpv with networking support(ffmpeg with networking)
-	- everything else should be on a default GNU/Linux install
+__--write-sub/--sub-lang en__ options: Download subtitles in specified language if available.
 
-### Uses:
-	
-If the script is in your current directory:
+__--merge-output-format=mkv__ option: Merge the downloaded files into the mkv container. This is mostly for external sites like Youtube that use separate video and audio files for the higher resolution videos. Not applicable to Iwara since there are no separate audio and video files.
 
-	- ./iwachan URL
-	- ./iwachan -d URL
-	- ./iwachan -h
-If the script is in your $PATH:
+__The rest of the options.__ The rest of the options are mostly for personal use, but they shouldn't affect anything for most people. _Look at the youtube-dl manpage for information on what these options do._
 
-	- iwachan URL
-	- iwachan -d URL
-	- iwachan -h
+### Output
+The output files will be in your specified directories based on the youtube-dl config settings files _(see above)_
 
-### Errors:
+__(This is the default)__
+```
+$HOME/Videos/MMD/SITE/USER/[UPLOAD_DATE] VIDEO_TITLE [URL_ID].EXTENSION
+or
+$HOME/Videos/MMD/Iwara/TestUser/[20200128] Cool MMD [XXXXXXX].mp4
+```
+I believe all files from __Iwara__ are __mp4__ while __external sites__ get muxed to __mkv__ since it's getting the best __1080p60__ video and best audio, usually __160k opus__ for youtube.
 
-	- iwachan -i URL
+## Uses:
 
-Currently, the script will probably not give you much information if something goes wrong.
-The -i flag will either fail, get the wrong information, or work seamlessly. This is due to the way the page is formatted in html. I will see if I can fix this with just 
-the current methods I'm using. If I can't, I'll have to look into an html parser of some kind.
+```
+iwachan             (Uses the first entry in your clipboard using the "xsel" program)
+iwachan URL         (Uses the link you pass to the script)
+iwachan batch.txt   (Uses a plain text bactch file)
+```
 
-### To-Do:
-I'm not entirely sure of how the site functions yet. There is bound to be some errors when trying to run the script. I will get around to fixing these later on as I find them.
+## Batch Files:
+The batch file is a plain text file with one link per line
 
-There are some videos that used to be hosted by third-party sites that were just embedded into the previous (trollvids) site. I'm not sure how these videos are currently hosted.
-As time goes on, I will try to see if I can get them working based on how Sita makes his site work.
+```
+cat batch.txt
+https://www.youtube.com/watch?v=URL_ID
+https://www.youtube.com/watch?v=URL_ID
+https://ecchi.iwara.tv/videos/URL_ID
+https://iwara.tv/videos/URL_ID
+```
 
-There are private videos on the new site as well. I don't know too much on how they work, so I will try a few things out. Don't get your hopes up.
+## Errors:
+All iwara.tv links must be plain links without anything after the URL_ID or the extractor will throw an error and either refuse to download, download lower quality videos, or not properly put the videos in their directories.
 
-	- Google hosted videos
-	- Youtube hosted videos
-	- Externally hosted videos
-	- Private videos
+__VALID__ link with expected output
+```
+https://ecchi.iwara.tv/videos/URL_ID
+```
+__INVALID__ link that will throw an error
+```
+https://ecchi.iwara.tv/videos/URL_ID?language=en
+```
+## Solutions:
+Either browse the site in your preferred language and __manually remove the extra information__, browse the site __in the native japanese language__, or put all the links in a batch file and run the __clean\_batch function__ to clean the links automatically. _Information about the __clean\_batch__ function and how to use it is below_.
+
+## Notes:
+
+__ONLY FOR iwara.tv/youtube.com links, NOT shortened links.__
+The clean_batch function will clean the batch file you input. It'll look for files (excluding .part files) that have a matching URL_ID and delete the links from the batch file. It'll also remove anything after the first ? (question mark) in iwara links so as to not confuse the youtube-dl extractor. __The input to run the function _must_ have CLEAN then the batch file.__
+```
+iwachan CLEAN batch.txt
+```
+This will create a backup of the batch file (batch.txt.bak) in case there is an error or you want to manually review what it removed __(The old backup file will be overwritten everytime you run the clean_batch function, so be careful!)__, then just run the script as usual, pointing to the batch file.
+```
+iwachan batch.txt
+```
+
+## To do:
+ - Fix any bugs that crop up
+ - Try to make the script more efficient
+ - Deal with third-party hosted videos within Iwara
+ - Sanitize Iwara links to remove anything after the URL_ID without the clean_batch function
+
+## Fix me:
+ - Private videos
+
+I don't know too much on how they work, so I will try a few things out. Don't get your hopes up.
 
 Any comments, questions, or jokes are appreciated.
