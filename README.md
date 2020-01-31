@@ -2,7 +2,7 @@
 Script to download videos from Iwara/External sites using youtube-dl.
 This is a complete redo of the original iwachan script.
 
-#### Current Version: Iwachan-v2.0
+#### Current Version: Iwachan-v2.1
 
 ## Description:
 Helper script to use __youtube-dl__ as __iwachan__. It detects if the URL is from Iwara, an external site (Ex. Youtube), or a batch file. If it detects a batch file, it separates the links to use different youtube-dl settings. It will get the __best source__ from Iwara and __1080p60fps or lower__ from external sites. You need to manually edit these settings if you want other video/audio resolutions/formats (_look into the __youtube-dl -F__ option_). It uses two external files (__iwachan__ and __iwachan-hq__) that have the custom settings in the $HOME/.config/youtube-dl directory. The __iwachan file__ has the settings for __iwara.tv__ while __iwachan-hq__ has the settings for __external sites__. Lastly, this script uses the __updated extractor__.
@@ -80,7 +80,7 @@ I believe all files from __Iwara__ are __mp4__ while __external sites__ get muxe
 ## Uses:
 
 ```
-iwachan             (Uses the first entry in your clipboard using the "xsel" program)
+iwachan             (Uses the latest entry in your clipboard using the "xsel" program)
 iwachan URL         (Uses the link you pass to the script)
 iwachan batch.txt   (Uses a plain text batch file)
 ```
@@ -97,7 +97,8 @@ https://iwara.tv/videos/URL_ID
 ```
 
 ## Errors:
-All iwara.tv links must be plain links without anything after the URL_ID or the extractor will throw an error and either refuse to download, download lower quality videos, or not properly put the videos in their directories.
+### FIXED clipboard sanitation for Iwara links in v2.1
+All iwara.tv links must be plain text links without anything after the URL\_ID or the extractor will throw an error and either refuse to download, download lower quality videos, or not properly put the videos in their directories.
 
 __VALID__ link with expected output
 ```
@@ -108,12 +109,13 @@ __INVALID__ link that will throw an error
 https://ecchi.iwara.tv/videos/URL_ID?language=en
 ```
 ## Solutions:
+### FIXED clipboard sanitation for Iwara links in v2.1
 Either browse the site in your preferred language and __manually remove the extra information__, browse the site __in the native japanese language__, or put all the links in a batch file and run the __clean\_batch function__ to clean the links automatically. _Information about the __clean\_batch__ function and how to use it is below_.
 
 ## Notes:
 
 __ONLY FOR iwara.tv/youtube.com links, NOT shortened links.__
-The clean_batch function will clean the batch file you input. It'll look for files (excluding .part files) that have a matching URL_ID and delete the links from the batch file. It'll also remove anything after the first ? (question mark) in iwara links so as to not confuse the youtube-dl extractor. __The input to run the function _must_ have CLEAN then the batch file.__
+The clean\_batch function will clean the batch file you input. It'll look for files (excluding .part files) that have a matching URL\_ID and delete the links from the batch file. It'll also remove anything after the first ? (question mark) in iwara links so as to not confuse the youtube-dl extractor. __The input to run the function _must_ have CLEAN then the batch file.__
 ```
 iwachan CLEAN batch.txt
 ```
@@ -126,7 +128,7 @@ iwachan batch.txt
  - Fix any bugs that crop up
  - Try to make the script more efficient
  - Deal with third-party hosted videos within Iwara
- - Sanitize Iwara links to remove anything after the URL_ID without the clean_batch function
+ - Sanitize Iwara links to remove anything after the URL\_ID from the clipboard (batch files still need to use the CLEAN\_BATCH function)
 
 ## Fix me:
  - Private videos
