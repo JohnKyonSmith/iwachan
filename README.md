@@ -86,7 +86,12 @@ iwachan batch.txt   (Uses a plain text batch file)
 ```
 
 ## Batch Files:
-The batch file is a plain text file with one link per line
+The batch file is a plain text file with one link per line. Also, try to put the batch file in the root of the downloaded files folder. This will make the CLEAN\_BATCH function actually work, instead of just sanitizing the iwara links. The batch file would go in the MMD folder in the following example. This allows for the CLEAN\_BATCH function to search for and delete links in the batch file that you've already downloaded (excluding .part files).
+
+
+```
+$HOME/Videos/MMD/SITE/USER/...
+```
 
 ```
 cat batch.txt
@@ -128,7 +133,6 @@ iwachan batch.txt
  - Fix any bugs that crop up
  - Try to make the script more efficient
  - Deal with third-party hosted videos within Iwara
- - Sanitize Iwara links to remove anything after the URL\_ID from the clipboard (batch files still need to use the CLEAN\_BATCH function)
 
 ## Fix me:
  - Private videos
